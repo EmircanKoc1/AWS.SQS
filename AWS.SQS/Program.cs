@@ -91,7 +91,6 @@ app.MapGet("/get-queue-url-by-name", async (
 
 
 app.MapPost("/send-message-to-queue ", async (
- [FromServices] IConfiguration _configuration,
  [FromServices] IAmazonSQS _amazonSQS,
  [FromBody] string message,
  [FromQuery] string queueName) =>
