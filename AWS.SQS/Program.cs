@@ -22,7 +22,6 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/list-queues", async (
     [FromServices] IAmazonSQS _amazonSQS,
-    [FromServices] IConfiguration _configuration,
     [FromQuery] int maxResults) =>
 {
     var listQueuesRequest = new ListQueuesRequest()
@@ -37,9 +36,8 @@ app.MapGet("/list-queues", async (
 
 });
 
-app.MapPost("create-queue", async (
+app.MapPost("/create-queue", async (
     [FromServices] IAmazonSQS _amazonSQS,
-    [FromServices] IConfiguration _configuration,
     [FromQuery] string queueName) =>
 {
     var createQueueRequest = new CreateQueueRequest()
@@ -54,9 +52,8 @@ app.MapPost("create-queue", async (
 });
 
 
-app.MapDelete("delete-queue-by-name", async (
+app.MapDelete("/delete-queue-by-name", async (
     [FromServices] IAmazonSQS _amazonSQS,
-    [FromServices] IConfiguration _configuration,
     [FromQuery] string queueName) =>
 {
 
@@ -74,28 +71,96 @@ app.MapDelete("delete-queue-by-name", async (
 
 });
 
-
-app.MapPost("/send-message ", async (
- [FromServices] IConfiguration _configuration,
- [FromServices] IAmazonSQS _amazonSQS,
- [FromBody] string message) =>
+app.MapGet("/get-queue-url-by-name", async (
+    [FromServices] IAmazonSQS _amazonSQS,
+    [FromQuery] string queueName) =>
 {
 
+    var getQueueUrlRequest = new GetQueueUrlRequest()
+    {
+        QueueName = queueName
+    };
 
-    var queueUrl = _configuration;
+    var getQueueUrlReponse = await _amazonSQS.GetQueueUrlAsync(queueName);
 
 
-
-
-
-
-    return await _amazonSQS.ReceiveMessageAsync("");
-
+    return Results.Ok(getQueueUrlReponse.QueueUrl);
 
 });
 
 
 
+app.MapPost("/send-message-to-queue ", async (
+ [FromServices] IConfiguration _configuration,
+ [FromServices] IAmazonSQS _amazonSQS,
+ [FromBody] string message,
+ [FromQuery] string queueName) =>
+{
+
+    var getQueueUrlRequest = new GetQueueUrlRequest()
+    {
+        QueueName = queueName
+    };
+
+
+    var getQueueUrlResponse = await _amazonSQS.GetQueueUrlAsync(getQueueUrlRequest);
+
+    var sendMessageRequest = new SendMessageRequest()
+    {
+        QueueUrl = getQueueUrlResponse.QueueUrl,
+        MessageBody = message
+
+    };
+
+    var sendMessageResponse = await _amazonSQS.SendMessageAsync(sendMessageRequest);
+
+    return Results.Ok(sendMessageResponse);
+});
+
+
+app.MapPost("/receive-message-from-queue", async (
+ [FromServices] IAmazonSQS _amazonSQS,
+ [FromQuery] string queueName,
+ [FromQuery] int receiveCount) =>
+{
+    var getQueueUrlRequest = new GetQueueUrlRequest()
+    {
+        QueueName = queueName
+    };
+
+
+    var getQueueUrlResponse = await _amazonSQS.GetQueueUrlAsync(getQueueUrlRequest);
+
+
+    var receiveMessageRequest = new ReceiveMessageRequest()
+    {
+        QueueUrl = getQueueUrlResponse.QueueUrl,
+        MaxNumberOfMessages = receiveCount,
+        VisibilityTimeout = 30,
+        WaitTimeSeconds = 20
+    };
+
+    var receiveMessageResponse = await _amazonSQS.ReceiveMessageAsync(receiveMessageRequest);
+
+    var deleteMessageResponses = new List<DeleteMessageResponse>(
+        capacity: receiveCount);
+
+    foreach (var message in receiveMessageResponse.Messages)
+    {
+        var deleteMessageRequest = new DeleteMessageRequest()
+        {
+            QueueUrl = getQueueUrlResponse.QueueUrl,
+            ReceiptHandle = message.ReceiptHandle
+        };
+
+        var deleteMessageResponse = await _amazonSQS.DeleteMessageAsync(deleteMessageRequest);
+
+        deleteMessageResponses.Add(deleteMessageResponse);
+    }
+    
+
+    return Results.Ok(deleteMessageResponses);
+});
 
 
 
