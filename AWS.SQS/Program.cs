@@ -54,6 +54,32 @@ app.MapPost("create-queue", async (
 });
 
 
+app.MapDelete("delete-queue-by-name", async (
+    [FromServices] IAmazonSQS _amazonSQS,
+    [FromServices] IConfiguration _configuration,
+    [FromQuery] string queueName) =>
+{
+
+    var getQueueUrlResponse = await _amazonSQS.GetQueueUrlAsync(queueName);
+
+    var deleteQueueRequest = new DeleteQueueRequest()
+    {
+        QueueUrl = getQueueUrlResponse.QueueUrl
+    };
+
+    var deleteQueueResponse = await _amazonSQS.DeleteQueueAsync(deleteQueueRequest);
+
+    return Results.Ok(deleteQueueResponse);
+
+
+});
+
+
+
+
+
+
+
 
 
 
