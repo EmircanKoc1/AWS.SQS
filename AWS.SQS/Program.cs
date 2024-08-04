@@ -75,6 +75,25 @@ app.MapDelete("delete-queue-by-name", async (
 });
 
 
+app.MapPost("/send-message ", async (
+ [FromServices] IConfiguration _configuration,
+ [FromServices] IAmazonSQS _amazonSQS,
+ [FromBody] string message) =>
+{
+
+
+    var queueUrl = _configuration;
+
+
+
+
+
+
+    return await _amazonSQS.ReceiveMessageAsync("");
+
+
+});
+
 
 
 
