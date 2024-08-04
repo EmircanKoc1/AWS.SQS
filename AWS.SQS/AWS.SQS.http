@@ -1,0 +1,6 @@
+@AWS.SQS_HostAddress = http://localhost:5173
+
+GET {{AWS.SQS_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
