@@ -37,6 +37,23 @@ app.MapGet("/list-queues", async (
 
 });
 
+app.MapPost("create-queue", async (
+    [FromServices] IAmazonSQS _amazonSQS,
+    [FromServices] IConfiguration _configuration,
+    [FromQuery] string queueName) =>
+{
+    var createQueueRequest = new CreateQueueRequest()
+    {
+        QueueName = queueName
+    };
+
+    var createQueueResponse = await _amazonSQS.CreateQueueAsync(queueName);
+
+    return Results.Ok(createQueueResponse);
+
+});
+
+
 
 
 
