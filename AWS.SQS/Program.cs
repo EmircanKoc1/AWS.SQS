@@ -37,43 +37,7 @@ app.MapGet("/list-queues", async (
 
 });
 
-app.MapPost("create-queue", async (
-    [FromServices] IAmazonSQS _amazonSQS,
-    [FromServices] IConfiguration _configuration,
-    [FromQuery] string queueName) =>
-{
-   
 
-    var listedQueuesResponse = await _amazonSQS.ListQueuesAsync(listQueuesRequest);
-
-
-    return Results.Ok(listedQueuesResponse);
-
-});
-
-
-
-
-
-
-app.MapPost("/send-message ", async (
- [FromServices] IConfiguration _configuration,
- [FromServices] IAmazonSQS _amazonSQS,
- [FromBody] string message) =>
-{
-
-
-    var queueUrl = _configuration;
-
-
-
-
-
-
-    return await _amazonSQS.ReceiveMessageAsync("");
-
-
-});
 
 
 
